@@ -1,7 +1,7 @@
----
+﻿---
 layout: post
 title:  "MariaDB encoding"
-date:   2020-09-16 18:00:13 +0800
+date:   2020-09-23 12:10:13 +0800
 categories: setting
 tags: mariadb encoding
 ---
@@ -12,6 +12,7 @@ mariadb를 사용하면 설정하기 전에는 한글이 보이지 않는다!
 
 *  client, connection, results 부분이** latin1**로 설정되어있어 한글이 깨진다.
 >MariaDB [none]> show variables like 'c%';
+
 +----------------------------------+----------------------------+
 | Variable_name                    | Value                      |
 +----------------------------------+----------------------------+
@@ -59,6 +60,7 @@ encoding 설정을 하기 위해선
 다시 확인을 하면 인코딩이 **utf8mb4**로 바뀐것을 알 수 있다.
 (utf8mb4는 utf8로는 emoji를 표현할 수 없는 문제를 해결하기 위해 사용한다고 한다.)
 > MariaDB[none]> show variables like 'c%';
+
 +----------------------------------+----------------------------+
 | Variable_name                    | Value                      |
 +----------------------------------+----------------------------+
