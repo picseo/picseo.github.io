@@ -1,0 +1,336 @@
+2020/07/14 - 디비 연동, 로그인 api확인
+
+Docker가 mariadb라는 이미지를 가지는 db를 서버에 연결해주는 역할을 한다
+
+mariadb는 mysql같이 database들을 다루는 곳이고
+
+database안에 여러개의 table이 존재한다.
+
+-------------------------------------------------------------------------------------------
+기억이 안났던 개념
+-Controller의 전달인자
+	(출처 : https://elfinlas.github.io/2018/02/18/spring-parameter/)
+	type-1 : http://localhost:8080?index=1&page=2
+	type-2 : http://localhost:8080/index/1
+
+	type-1 => 파라메터의 값과 이름을 함께 전달하는 방식(Get)
+	type-2 => rest api에서 값을 호출할 때 주로 많이 사용
+
+	1. @RequestParam
+		type-1에서 사용(url 뒤의 파라메터 값을 가져옴)
+		@RequestParam("index") int idx,  -> 함수에서 index값을 idx로 접근??
+		
+		**ReqeustPram 추가 사용법 ( 출처 : https://velog.io/@hellozin/RequestParamrequired-false-%EC%A3%BC%EC%9D%98%ED%95%A0-%EC%A0%90 )
+			@ReqeustParam(required = false) -> 해당 필드가 쿼리 스트링에 존재하지 않아도 예외 발생하지 않음
+			Map<K,V>나 CustomArgument의 경우 required = false 속성이 없어도 예외가 발생하지 않으니까 argument자체가 무시당한다고 한다. 
+	2. @PathVariable
+		type-2에서 사용
+		@PostMapping("delete/{idx}")
+		@ResponseBody
+		-> 파라메터부분 (@PathVariable("idx") int ID)
+		->함수에서는 ID로 사용
+-mysql query 문장
+	1.현재 시간 입력하기(DATE 타입) - > now()함수를 사용한다.
+
+	2. mariadb : https://www.codingfactory.net/12095
+
+-Postman으로 Post요청을 보낼때
+	Post로 설정한다.
+	Body부분에서 raw를 선택후, Json으로 선택
+	json 형식으로 입력 후 send한다.
+	{
+    		"email": "bb@cc.com",
+    		"nickname": "B",
+    		"password": "Aa1!Aa1!"
+	}
+- JPA는 CRUD를 알아서 해준다는데
+	read까지는 알겠는데
+	update는 어떻게 하는 거지
+	
+- lombok이 뭐하는거지
+-Optional 객체는 뭐지
+
+#############################################################################
+2020/07/15
+
+너무 하다. 왜 안되지 이러다 버려야될지도 몰라...
+
+sts랑 mysql로 일단 간단한 로그인은 만들었다.
+
+------------------------------------------------------------------------------------------------------------------
+1. UserDao.save(uu)를 하려고 하면 나오는 에러이다
+	Cannot make a static reference to the non-static method save(User) from the type CrudRepository<User,String>
+
+	-> static 값은 non-static methos에서 사용할 수 없다는 말인데
+
+	static 은 정적 데이터 영역에 만들어져서 공유되고, 프로그램이 시작될 때 만들어지고 종료될 때 사라진다.
+	non-static은 해당객체에서만 접근가능, 객체가 생성되어 객체가 소멸되면 같이 사라진다.
+
+	그래서 static을 non-static으로 정의하면 프로그램시작시 객체가 없으므로 값이 없고, 그래서 에러가 난다.??
+
+	//static이 아닌 메소드나 필드를 참조 할 수 없다는 내용이다. 이유는, static 맴버들이 먼저 컴파일되기 때문에 static이 아닌 메소드나 필드는 정의되지 않았기 때문이다. 따라서, 모든 메소드나 필드를 static 맴버로 바꾸거나 Woo 클래스의 객체를 생성해서 접근해야 한다.
+
+관련 페이지
+1 : 
+http://blog.naver.com/PostView.nhn?blogId=50after&logNo=220870844539&parentCategoryNo=&categoryNo=&viewDate=&isShowPopularPosts=false&from=postView
+2 :
+https://hashcode.co.kr/questions/2061/cannot-make-a-static-reference-to-the-non-static-method
+3:
+https://wookoa.tistory.com/80
+4 : static 변수에 autowired해보기
+https://madplay.github.io/post/spring-framework-static-field-injection
+
+
+	=> UserDao가 아니라 userDao를 써야했다. ....... 미쳤나보다
+
+2. JPA는 무엇인가
+	DBMS와 JAVA를 연결해주는 ORM
+	객체지향적으로 데이터 베이스를 사용할 수 있다.
+	
+	JPA 영속 컨텍스트는 관리하는 객체의 값이 변경하는 것을 감지하면 UPDATE문을 통해 같이 변경
+
+관련 페이지
+1: jpa 기본 설명
+https://spring.io/guides/gs/accessing-data-jpa/
+https://velog.io/@junwoo4690/Spring-Boot-JPA-%EC%82%AC%EC%9A%A9%ED%95%B4%EB%B3%B4%EA%B8%B0-erjpw41nl7
+
+2: jpa 레퍼런스 번역
+https://arahansa.github.io/docs_spring/jpa.html
+		
+3. JPA annotation들을 알아보자
+	@GenerateValue -> 자동으로 값을 배정함을 의미한다. (AUTO_INCREMENT 된다)
+	
+4. lombok annotation
+	@Getter, @Setter -> getXxx() -> boolean일때는 isXxx() , setXxx()를 생성해준다.
+	
+	생성자 자동 생성
+	@NoArgsConstructor -> 인자가 하나도 없는 생성자
+	@RequiredArgsConstructor -> final이나 @NotNull인 필드만 인자로 가지는 생성자
+	@AllArgsConstructor -> 모든 인자를 가지는 생성자
+
+	@toString(exclude = "속성명") : 속성명에 해당하는 값만 String에서 제외하고 나머지 값을 String으로 만든다.
+
+	@EqualsAndHashCode(callSuper = true)
+	-> 자바빈을 만들때 equals, hashCode를 오버라이딩하는 메소드를 생성할 수 있다.
+	-> callsuper true => 부모 클래스 필드값들도 동일한지 체크
+	-> callSuper false => 자신 클래스의 필드값만 고려(기본값)
+
+	@Data
+	Getter, Setter, RequiredArgsConstructor, ToString, EqualsAndHashCode를 한번에 설정해줌
+관련 페이지(출처)
+https://www.daleseo.com/lombok-popular-annotations/
+
+5. vscode와 lombok 
+	vscode랑 lombok은 compatibl?대충 잘 연동이 안될 수도 있나보다
+	그래서 annotation을 잘 읽지 못했는데
+	이걸 도와 주는 extension을 찾았다. -> Lombok Annotations Support for VS Code
+	-> https://marketplace.visualstudio.com/items?itemName=GabrielBB.vscode-lombok
+	
+	위의 extension을 깔면 annotaion을 잘 읽어서 수행한다.
+################################################################################################
+2020/07/16
+
+	오늘의 할일
+		* 회원가입지 인증 메일 구현하기
+		* rest api 이름 정리?
+		* 비밀번호 변경????
+
+-------------------------------------------------------------------------------------------------------------------
+2020.07.20
+
+sns라고는 하는데 팔로우 팔로잉을 어떻게 만들수 있을까나
+
+찾은 페이지 : 
+sns에 대해서
+https://d2.naver.com/helloworld/551588
+
+vue에 대해서
+https://kamang-it.tistory.com/entry/Vue17vuex-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0actions%EB%A1%9C-%EB%B9%84%EB%8F%99%EA%B8%B0-%ED%86%B5%EC%8B%A0?category=732314
+
+spring boot 인스타그램
+
+https://blog.naver.com/PostView.nhn?blogId=codingspecialist&logNo=221570134974&categoryNo=135&parentCategoryNo=0&viewDate=&currentPage=1&postListTopCurrentPage=&from=postList
+
+https://blog.naver.com/getinthere/221589134330
+
+https://yeahajeong.tistory.com/category/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8/Instagram
+
+https://leleluv1122.github.io/springboot/spring-boot-instagram-7/
+
+//onetomany annotaitions
+https://victorydntmd.tistory.com/208
+
+----------------------------------
+2020.07.22
+
+아키텍처를 그리다
+*아키텍처란?
+	구성요소들 사이에서 유기적 관계를 표현
+	설계와 업그레이드를 통제하는 지침과 원칙
+
+*아키텍처 스타일
+	MSA스타일 
+
+*아키텍처를 그리는 목표?
+	초기설계과정의 결정사항
+	커뮤니케이션의 기준점
+	재사용 가능한 레퍼런스
+
+오늘의 목표 : 
+	*이미지를 저장해보자!
+	*서버 설정하자
+
+*이미지를 저장해보자
+	처음에는 DB에 저장하는게 멋져보여서 하고 싶었는데 - 이미지는 정보가 커서 DB에 과부하가 올 수 있다고 한다.
+	그래서 이미지는 서버에 저장하고, 그 경로를 DB에 저장하는 방식을 사용한다고 한다.
+	
+	이미지를 서버에 올리고..... C:\Inetbup\wwwroot\website\image  에 이미지를
+	올린 후
+	DB에는 그 경로를         ..... http://IP or Website Name/image/image.gif
+	등을 사용합니다.
+
+	경로 : D:/git/project2/s03p12a309-jin/s03p12a309-jin/back-end/src/main/resources/static/images/profiles/
+	1. 이미지를 서버에 저장해보자!
+		front에서 multipart/form-data요청을 보내면 ->
+		@RequestPart 어노테이션으로 Multipart 형식의 변수로 이미지를 받아온다.
+
+		String originalfileName = file.getOriginalFilename(); //이미지 이름을 얻고
+		File dest = new File("C:/Image/" + originalfileName);//이미지 저장경로 + 이름
+		file.transferTo(dest); //dest로 이미지 이동
+
+	2. 받은 이미지 이름을 회원이름_이미지이름 로 형식으로 바꾸어저장한다.
+		**문제 될 만한건 : 회원이름이 같은 거나 basic만 사용할 수 있도록 하면 다른 사람거 안하려나
+
+	3. 기본 이미지가 아닌 경우에는 사용자가 이전에 사용하고 있던 이미지 파일은 삭제해준다.
+	
+	4. Object를 return 해준다.
+
+	//
+-----------------------------------------------------------------------------------------
+https://subicura.com/2017/01/19/docker-guide-for-beginners-1.html
+
+-----------------------------------------------------------------------------------------
+20.07.27
+대체 이미지를 어떻게 저장할 것인가!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111
+
+파일 저장 관련 페이지들
+1. 제일 나랑 비슷한데 이사람만 해결하고, 나는 못하고 
+https://csy7792.tistory.com/82
+
+2.
+--------------------------------------------------------------------------------------------
+20.07.28
+상대 경로를 이용해서 resource폴더의 images에 저장하고 싶은데
+
+/httpservelet.getRealpath나 classPath:
+모두 이상하게 tomcat-docs어쩌구 폴더로 들어가 버린다.
+
+resource/static에 저장하고 싶은데 그럴 경우엔 새로 프로젝트를 올릴때 이미 있던 이미지들도
+다시 올려야 한다고 한다.
+외부에 저장을 하라는데 어디다 저장을 할가
+
+이미지를 디비에 넣으면 이미지가 크기가 커서 과부화가 올수있다고 하니가
+
+결국 이미지는 외부에 저장을 해야하는데
+
+images -> profiles
+          -> boards -> 
+--------------------------------------------------------------------------------------------------
+왜 tomcat-docbase에 저장되었을꺼
+https://tridion.stackexchange.com/questions/14324/temporary-upload-location-is-not-valid : tomcat-docbase가 임시 폴더로 생긴다
+https://stackoverflow.com/questions/43089611/tmp-tomcat-docbase-is-always-created-with-a-spring-boot-jar-but-not-a-war
+
+https://groups.google.com/g/ksug/c/t66pCWFrTu8?pli=1
+
+https://ohjongsung.io/2017/06/24/tomcat-8%EC%97%90-root%EB%A1%9C-%EA%B2%8C%EC%8B%9C%ED%95%98%EA%B8%B0
+
+http://trandent.com/article/etc/detail/678
+
+https://yongblog.tistory.com/entry/appbase%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-tomcat-%EC%84%A4%EC%A0%95 : appbase를 이용한 tomcat 설정
+
+
+절대경로 : https://m.blog.naver.com/PostView.nhn?blogId=horajjan&logNo=220484659082&proxyReferer=https:%2F%2Fwww.google.com%2F
+----------------------------------------------------------------------------------------------------
+spring boot 를 maven wrapper를 이용해서 war파일로 압축했다.
+
+mvn clean install package를 하면 압축해준다.
+
+압축된 파일을 unbuntu의 tomcat8의 webapps에 넣는다.
+
+java -jar 압축파일.war를 입력하여 실행한다.
+
+-> http://도메인:8080 로 접근이 가능해진다.
+
+이미지 transferTo는 오류가 발생하지 않는데 폴더에서 이미지 파일을 보여주지 않는다.
+왜그럴가
+
+이미지를 업로드 해도 이미지가 저장되지 않는다.
+
+tomcat8/conf 의 server.xml을 설정하자!!!!
+-------------------------------------------------
+<설정 설명 페이지들>
+https://precioustar.tistory.com/27
+
+http://trandent.com/article/etc/detail/678
+
+https://cornswrold.tistory.com/347
+-------------------------------------------------
+
+여기에 설명이 있는데, 첫번째 context에서 프로젝트를 입력하라는게 뭔지 모르겠다.
+->
+https://gs.saro.me/dev?tn=461
+이거 읽으면서 고쳐보자
+
+Path를 아예 지정하고, 해당 폴더를 chmod를 777로 바꾸면 upload는 가능한데
+하나만 잘올라가고, 그 뒤에 다른게 잘 안올라간다.
+
+----------------------------------------------------------------
+08.03
+이미지 읽어오는 걸 끝냈다.
+
+conf/Catalina/localhost/에서 원하는 주소이름으로 파일을 만들어야 했다.
+
+webapp/images로 들어가 고싶으면 webapp#images.xml로 파일이름을 작성해야했는데
+그냥 images로만 해서 이미지를 읽어오지 못하고 있었다.
+
+http://blog.naver.com/PostView.nhn?blogId=mgint222&logNo=221012476790
+
+http://trandent.com/article/etc/detail/678
+
+https://feeva.github.io/posts/%ED%86%B0%EC%BA%A3%EC%9D%98-%EC%BB%A8%ED%85%8D%EC%8A%A4%ED%8A%B8-%EC%99%B8%EB%B6%80%EB%A1%9C-%EA%B2%BD%EB%A1%9C-%EB%A7%A4%ED%95%91%ED%95%98%EB%8A%94-%EB%B0%A9%EB%B2%95
+
+-------------------------------------------------------------------
+08.04
+
+form-data/Multipart는 이미지파일 하나만 보내는 건 줄 알았는데
+파일, 텍스트를 묶어서 받을 수 있는 형태였다.
+
+RequestParam("이름") 타입명 변수명 -> 이렇게 받으면 함수안에서 변수명으로 바로 사용할 수 있다.
+
+https://victorydntmd.tistory.com/174
+
+https://jsonobject.tistory.com/228
+
+-------------------------------------------------------------------
+08.13 
+tomcat으로 서버를 돌리면 log를 못봐서 답답했는데 로그를 보는 방법을 알았다.
+
+tail -f /tomcat설치위치/logs/catalina.out
+으로 볼수 있다.
+
+이미지가 안올라가는 문제 발견!!!!
+이미지 크기가 너무 크면 막아버린다. -> 이미지를 원본과 같은 비율로 썸네일을 만들자!!
+
+https://offbyone.tistory.com/131
+https://gunbin91.github.io/jsp/2019/05/28/jsp_11_file.html
+------------------------------------------------
+이미지를 줄이고 싶다.
+https://post.flow.team/developer/image-resizing1/
+https://post.flow.team/developer/img-resizing-2/
+https://ktko.tistory.com/entry/%EC%9E%90%EB%B0%94-%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A6%AC%EC%82%AC%EC%9D%B4%EC%A6%88
+
+------------------------------------------
+밀레니얼 세대 : 초록색 좋아 : https://www.ilyo.co.kr/?ac=article_view&entry_id=344588
+
+
+---------------------------------------------------------------------------

@@ -1,0 +1,101 @@
+https://developer.mozilla.org/ko/docs/Learn/Server-side/Django/development_environment
+
+https://dojang.io/mod/page/view.php?id=1212
+
+https://blog.thereis.xyz/38
+
+https://pandas.pydata.org/docs/user_guide/merging.html
+
+https://pandas.pydata.org/docs/user_guide/sparse.html
+
+https://python.bakyeono.net/chapter-3-4.html
+
+django-admin startproject mysite -> 프로젝트생성
+python manage.py runserver -> 개발 서버 생성
+
+기본으로 sqlite를 제공하는데 너무 느리니까 사용할 db로 바꾸는게 좋다고 해서
+docker에 mariadb를 설치하여 사용하기로 했다.
+
+docker : doginfo, {catinfo}
+
+https://ministar.tistory.com/4 - 쟝고 db연결 
+
+localhost로 db를 연결하려고 했는데, 잘 안돼서 생각해보니
+쟝고를 가상환경에서 만들어서 그런것 같다 어떻게 하면 연결이 될지 찾아봐야겠다.
+
+가상환경 문제가 아니라 database대신 container를 이름으로 쓰고 있어서 문제가 되었던 거였다.
+database이름으로 바꾸어 주니 잘 연결 되었다.
+
+pip install mysqlclient  #mysql 모듈 설치
+
+#장고 내의 setting.py 수정
+DATABASES = {
+
+    'default': {
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'db-name',  #mysql
+        'USER': 'db-user-name', #root
+        'PASSWORD': 'db-password', #1234
+        'HOST': 'db-adress', #공백으로 냅두면 default localhost
+        'PORT': 'port-number' #공백으로 냅두면 default 3306
+    }
+}
+
+그 다음, django가 연동한 DB에 초기화가 될 수 있도록 아래와 같이 migration 명령어를 실행해주자
+
+python manage.py makemigrations
+python manage.py migrate
+
+그후 show tables; 하면
+해당 database에 auth_, django_ 어쩌구 하는 table들이 생성되어 있으면 연동된것이라 한다.
+
+
+//mysql 정보 확인하고 싶을때는
+
+docker exec -it doginfo(컨테이너 이름) mysql -u root -p 
+하고 비밀번호를 입력하면
+
+컨테이너에 깔린 maria db에 들어갈 수 있다.
+
+
+https://docs.djangoproject.com/ko/3.1/intro/tutorial02/
+
+models.py 는 db와 연동되는 부분인거같다.
+table이름(models.Model):
+	column이름 = models.CharField(필수값) -> char 형태의 column
+
+이런 식으로 추가한 다음에 
+
+mysite/settings.py -> Installed_Apps에 polls.apps.PollsConfig를 추가하고
+cmd 창에서 python manage.py makemigrations polls를 하면 모델을 추가할 수 있다.
+
+추가한 모델은 migrate명령어를 이용하여 table을 만드는거같다.
+sqlmigrate를 사용하면 어떤 식으로 sql문이 만들어지는지를 보여준다.(확인용인듯)
+
+migrate 아직 적용되지 않은 마이그레이션을 모두 모아 실행한다. -> 모델의 변경사항, 스키마의 동기화
+
+****
+(models.py 에서) 모델을 변경합니다.
+python manage.py makemigrations을 통해 이 변경사항에 대한 마이그레이션을 만드세요.
+python manage.py migrate 명령을 통해 변경사항을 데이터베이스에 적용하세요.
+
+****
+
+python manage.py shell 여기서 model을 import해서 db를 추가삭제할 수 있다.
+
+
+관리자 id : admin
+비밀번호 : {catinfo}
+
+관리사이트에 app추가하기
+app의 admin.py에 admin.site.register(모델명)
+
+TIME_ZONE = 'Asia/Seoul' 이렇게 설정해야 우리나라 시간으로 저장된다.
+
+request = Request(url + queryParams)
+request.get_method = lambda: 'GET'
+response_body = urlopen(request).read()
+print response_body

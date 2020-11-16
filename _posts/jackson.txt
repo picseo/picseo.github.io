@@ -1,0 +1,27 @@
+jackson은 객체를 json으로 바꾸어 보내주는 역할을 하는 것 같다.
+
+이때 주의해야 할 점이 response로 보낼 객체에 ""Getter, Setter""를 추가해주어야 한다.
+추가해 주지 않을 경우 converter가 없다는 다음과 같은 오류가 발생했었다.
+message":"No converter found for return value of type: class com.coder.demo.vo.TokenResponse"
+
+
+<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.11.2</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.11.2</version>
+		</dependency>
